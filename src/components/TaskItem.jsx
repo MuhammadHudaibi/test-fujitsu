@@ -1,18 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { toggleTask, deleteTask, editTask } from '../features/tasks/tasksSlice';
 
-const TaskItem = ({ task }) => {
+const TaskItem = ({ task, dragAttributes, dragListeners }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(task.text);
   const [editCategory, setEditCategory] = useState(task.category);
   const dispatch = useDispatch();
 
+  useEffect(() => {
+    setEditText(task.text);
+    setEditCategory(task.category);
+  }, [task.text, task.category]);
+
   const handleSave = () => {
-    if (editText.trim()) {
-      dispatch(editTask({ id: task.id, newText: editText, newCategory: editCategory }));
+    const newText = editText.trim();
+    const newCategory = editCategory.trim();
+
+    if (newText && newCategory) {
+      dispatch(editTask({ id: task.id, newText, newCategory }));
       setIsEditing(false);
     }
+  };
+
+  const handleCancel = () => {
+    setEditText(task.text);
+    setEditCategory(task.category);
+    setIsEditing(false);
   };
 
   return (
@@ -24,6 +38,7 @@ const TaskItem = ({ task }) => {
             value={editText}
             onChange={(e) => setEditText(e.target.value)}
             className="flex-grow p-2 border-b-2 border-blue-500 focus:outline-none"
+            autoFocus 
           />
           <input
             type="text"
@@ -33,21 +48,26 @@ const TaskItem = ({ task }) => {
           />
           <div className="flex gap-2 justify-end mt-2 sm:mt-0">
             <button onClick={handleSave} className="text-green-500 hover:text-green-700 font-semibold">Simpan</button>
-            <button onClick={() => setIsEditing(false)} className="text-gray-500 hover:text-gray-700">Batal</button>
+            <button onClick={handleCancel} className="text-gray-500 hover:text-gray-700">Batal</button>
           </div>
         </div>
       ) : (
         <>
+          <div 
+            className="flex-shrink-0 cursor-grab touch-none p-2 text-gray-400 hover:text-gray-600"
+            {...dragAttributes} 
+            {...dragListeners}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zM4 9a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clipRule="evenodd" /><path d="M10 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zM4 9a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" transform="rotate(90 10 10)" /></svg>
+          </div>
           <input
             type="checkbox"
             checked={task.completed}
             onChange={() => dispatch(toggleTask(task.id))}
-            className="h-6 w-6 rounded-full border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+            className="h-6 w-6 rounded-full border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer ml-2"
           />
           <div className="flex-grow mx-4">
-            <p className={`font-medium ${task.completed ? 'line-through text-gray-500' : 'text-gray-800'}`}>
-              {task.text}
-            </p>
+            <p className={`font-medium ${task.completed ? 'line-through text-gray-500' : 'text-gray-800'}`}>{task.text}</p>
             <span className="text-xs text-white bg-gray-400 rounded-full px-2 py-0.5">{task.category}</span>
           </div>
           <div className="flex items-center gap-3">

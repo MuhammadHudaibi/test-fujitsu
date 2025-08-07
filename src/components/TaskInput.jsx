@@ -1,22 +1,28 @@
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { addTask } from '../features/tasks/tasksSlice';
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { addTask } from "../features/tasks/tasksSlice";
 
 function TaskInput() {
-  const [text, setText] = useState('');
-  const [category, setCategory] = useState('Personal');
+  const [text, setText] = useState("");
+  const [category, setCategory] = useState("Personal");
   const dispatch = useDispatch();
+  const allCategories = useSelector((state) => [
+    ...new Set(state.tasks.items.map((t) => t.category)),
+  ]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (text.trim()) {
       dispatch(addTask({ text, category }));
-      setText('');
+      setText("");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 mb-4">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col sm:flex-row gap-3 mb-4"
+    >
       <input
         type="text"
         value={text}
@@ -26,12 +32,21 @@ function TaskInput() {
       />
       <input
         type="text"
+        list="category-options"
         value={category}
         onChange={(e) => setCategory(e.target.value)}
         placeholder="Kategori (e.g. Work)"
         className="p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition w-full sm:w-32"
       />
-      <button type="submit" className="bg-blue-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-600 transition">
+      <datalist id="category-options">
+        {allCategories.map((cat) => (
+          <option key={cat} value={cat} />
+        ))}
+      </datalist>
+      <button
+        type="submit"
+        className="bg-blue-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-600 transition"
+      >
         Tambah
       </button>
     </form>

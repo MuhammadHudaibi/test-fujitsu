@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setFilter } from '../features/tasks/tasksSlice';
 
@@ -6,11 +6,16 @@ const FilterControls = () => {
   const dispatch = useDispatch();
   const { filter, items } = useSelector((state) => state.tasks);
   
-  const categories = ['all', ...new Set(items.map(task => task.category))];
+  const categories = useMemo(() => {
+    console.log("Calculating categories...");
+    return ['all', ...new Set(items.map(task => task.category))];
+  }, [items]);
 
   const handleFilterChange = (key, value) => {
     dispatch(setFilter({ [key]: value }));
   };
+
+  
 
   const statusButtons = [
     { label: 'Semua', value: 'all' },

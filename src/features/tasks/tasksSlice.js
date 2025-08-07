@@ -47,17 +47,29 @@ const tasksSlice = createSlice({
       state.filter = { ...state.filter, ...action.payload };
     },
     reorderTasks: (state, action) => {
-      const { sourceIndex, destinationIndex } = action.payload;
-      const items = Array.from(state.items);
-      const [reorderedItem] = items.splice(sourceIndex, 1);
-      items.splice(destinationIndex, 0, reorderedItem);
-      state.items = items;
+      const { activeId, overId } = action.payload;
+      const items = state.items;
+      const activeIndex = items.findIndex((t) => t.id === activeId);
+      if (overId === null) return;
+
+      const overIndex = items.findIndex((t) => t.id === overId);
+
+      if (activeIndex !== -1 && overIndex !== -1) {
+        const [reorderedItem] = items.splice(activeIndex, 1);
+        items.splice(overIndex, 0, reorderedItem);
+      }
     },
   },
 });
 
-export const { addTask, toggleTask, deleteTask, editTask, setFilter, reorderTasks } =
-  tasksSlice.actions;
+export const {
+  addTask,
+  toggleTask,
+  deleteTask,
+  editTask,
+  setFilter,
+  reorderTasks,
+} = tasksSlice.actions;
 
 export const selectFilteredTasks = (state) => {
   const { items, filter } = state.tasks;
