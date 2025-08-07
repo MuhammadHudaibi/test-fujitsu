@@ -4,11 +4,44 @@ import TaskInput from "./components/TaskInput";
 import FilterControls from "./components/FilterControls";
 import TaskItem from "./components/TaskItem";
 import Loader from "./components/Loader";
-import { selectFilteredTasks } from "./features/tasks/tasksSlice";
+import { selectFilteredTasks, reorderTasks  } from "./features/tasks/tasksSlice";
 import { fetchDataStart } from "./features/externalApi/externalApiSlice";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+function SortableTaskItem({ task }) {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: task.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <TaskItem task={task} />
+    </div>
+  );
+}
 
 function App() {
   const dispatch = useDispatch();
+  const allTasks = useSelector((state) => state.tasks.items);
   const filteredTasks = useSelector(selectFilteredTasks);
   const {
     data: apiData,
@@ -16,10 +49,34 @@ function App() {
     error: apiError,
   } = useSelector((state) => state.api);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  function handleDragEnd(event) {
+    const { active, over } = event;
+
+    if (active.id !== over.id) {
+      // Dapatkan posisi lama dan baru dari array SEMUA tugas
+      const oldIndex = allTasks.findIndex((t) => t.id === active.id);
+      const newIndex = allTasks.findIndex((t) => t.id === over.id);
+
+      // Kirim action ke Redux untuk mengurutkan ulang
+      dispatch(
+        reorderTasks({ sourceIndex: oldIndex, destinationIndex: newIndex })
+      );
+    }
+  }
+
   useEffect(() => {
     // Panggil saga saat komponen pertama kali di-mount
     dispatch(fetchDataStart());
   }, [dispatch]);
+
+  const filteredTaskIds = filteredTasks.map((t) => t.id);
 
   return (
     <div className="bg-gray-100 min-h-screen font-sans text-gray-800">
@@ -46,15 +103,33 @@ function App() {
           <FilterControls />
         </div>
 
-        <div className="space-y-4">
-          {filteredTasks.length > 0 ? (
-            filteredTasks.map((task) => <TaskItem key={task.id} task={task} />)
-          ) : (
-            <p className="text-center text-gray-500">
-              Tidak ada tugas. Saatnya bersantai!
-            </p>
-          )}
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={filteredTaskIds}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-4">
+              {filteredTasks.length > 0 ? (
+                filteredTasks.map((task) => (
+                  <SortableTaskItem key={task.id} task={task} />
+                ))
+              ) : (
+                <div className="text-center py-10 px-6 bg-white rounded-lg shadow-sm">
+                  <p className="text-gray-500">
+                    Tidak ada tugas yang cocok dengan filter Anda.
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    Coba ubah filter atau tambahkan tugas baru!
+                  </p>
+                </div>
+              )}
+            </div>
+          </SortableContext>
+        </DndContext>
       </main>
     </div>
   );

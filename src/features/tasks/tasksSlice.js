@@ -1,20 +1,25 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { v4 as uuidv4 } from 'uuid';
+import { createSlice } from "@reduxjs/toolkit";
+import { v4 as uuidv4 } from "uuid";
 
 const initialState = {
   items: [
-    { id: uuidv4(), text: 'Belajar Redux-Saga', completed: true, category: 'Work' },
-    { id: uuidv4(), text: 'Beli susu', completed: false, category: 'Personal' },
+    {
+      id: uuidv4(),
+      text: "Belajar Redux-Saga",
+      completed: true,
+      category: "Work",
+    },
+    { id: uuidv4(), text: "Beli susu", completed: false, category: "Personal" },
   ],
   filter: {
-    status: 'all',
-    category: 'all',
-    keyword: '',
+    status: "all",
+    category: "all",
+    keyword: "",
   },
 };
 
 const tasksSlice = createSlice({
-  name: 'tasks',
+  name: "tasks",
   initialState,
   reducers: {
     addTask: (state, action) => {
@@ -22,17 +27,17 @@ const tasksSlice = createSlice({
       state.items.push({ id: uuidv4(), text, category, completed: false });
     },
     toggleTask: (state, action) => {
-      const task = state.items.find(t => t.id === action.payload);
+      const task = state.items.find((t) => t.id === action.payload);
       if (task) {
         task.completed = !task.completed;
       }
     },
     deleteTask: (state, action) => {
-      state.items = state.items.filter(t => t.id !== action.payload);
+      state.items = state.items.filter((t) => t.id !== action.payload);
     },
     editTask: (state, action) => {
       const { id, newText, newCategory } = action.payload;
-      const task = state.items.find(t => t.id === id);
+      const task = state.items.find((t) => t.id === id);
       if (task) {
         task.text = newText;
         task.category = newCategory;
@@ -41,19 +46,31 @@ const tasksSlice = createSlice({
     setFilter: (state, action) => {
       state.filter = { ...state.filter, ...action.payload };
     },
+    reorderTasks: (state, action) => {
+      const { sourceIndex, destinationIndex } = action.payload;
+      const items = Array.from(state.items);
+      const [reorderedItem] = items.splice(sourceIndex, 1);
+      items.splice(destinationIndex, 0, reorderedItem);
+      state.items = items;
+    },
   },
 });
 
-export const { addTask, toggleTask, deleteTask, editTask, setFilter } = tasksSlice.actions;
+export const { addTask, toggleTask, deleteTask, editTask, setFilter, reorderTasks } =
+  tasksSlice.actions;
 
 export const selectFilteredTasks = (state) => {
   const { items, filter } = state.tasks;
-  return items.filter(task => {
-    const statusMatch = filter.status === 'all' || 
-                        (filter.status === 'completed' && task.completed) ||
-                        (filter.status === 'active' && !task.completed);
-    const categoryMatch = filter.category === 'all' || task.category === filter.category;
-    const keywordMatch = task.text.toLowerCase().includes(filter.keyword.toLowerCase());
+  return items.filter((task) => {
+    const statusMatch =
+      filter.status === "all" ||
+      (filter.status === "completed" && task.completed) ||
+      (filter.status === "active" && !task.completed);
+    const categoryMatch =
+      filter.category === "all" || task.category === filter.category;
+    const keywordMatch = task.text
+      .toLowerCase()
+      .includes(filter.keyword.toLowerCase());
     return statusMatch && categoryMatch && keywordMatch;
   });
 };
