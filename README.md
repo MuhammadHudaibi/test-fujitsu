@@ -30,7 +30,7 @@ Sebuah aplikasi to-do list prototipe yang kaya fitur, dibuat sebagai jawaban ata
 -   **Styling:** [Tailwind CSS](https://tailwindcss.com/) dengan [PostCSS](https://postcss.org/)
 -   **Drag & Drop:** [@dnd-kit](https://dndkit.com/) - Library drag-and-drop modern dan aksesibel untuk React.
 -   **HTTP Client:** [Axios](https://axios-http.com/)
--   **Build Tool:** [Vite](https://vitejs.dev/) / [Create React App](https://create-react-app.dev/) _(pilih yang sesuai dengan template-mu)_
+-   **Build Tool:** [Vite](https://vitejs.dev/)
 -   **ID Unik:** [UUID](https://www.npmjs.com/package/uuid)
 
 ---
